@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-    // Define variables used throughout the pipeline
     environment {
-        DOCKER_IMAGE = "your-dockerhub-username/student-management"
+        // ⚠️ Replace dali628 with your actual DockerHub username here only
+        DOCKER_IMAGE = "dali628/student-management"
         DOCKER_TAG = "latest"
     }
 
@@ -29,7 +29,6 @@ pipeline {
             }
         }
 
-        // NEW: Build the Docker image using your Dockerfile
         stage('Docker Build') {
             steps {
                 echo 'Construction de l image Docker...'
@@ -37,31 +36,20 @@ pipeline {
             }
         }
 
-        // NEW: Log in to DockerHub and push the image
-       stage('Docker Push') {
-           steps {
-               echo 'Push de l image vers DockerHub...'
-               withCredentials([usernamePassword(
-                         credentialsId: 'dockerhub-credentials',
-                         usernameVariable: 'dali628',
-                         passwordVariable: '!78GFp?LJsJW6_$'
-               )]) {
-                   script {
-                       // Store in local Groovy variables first
-                       def dockerUser = env.DOCKER_USER
-                       def dockerPass = env.DOCKER_PASS
-
-                       // Now use them safely in sh with double quotes
-                       sh """
-                           echo '${dockerPass}' | docker login -u '${dockerUser}' --password-stdin
-                           docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                           docker logout
-                       """
-                   }
-               }
-           }
-       }
-
+        stage('Docker Push') {
+            steps {
+                echo 'Push de l image vers DockerHub...'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh(script: 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin')
+                    sh(script: "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    sh(script: 'docker logout')
+                }
+            }
+        }
     }
 
     post {
