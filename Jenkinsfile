@@ -38,21 +38,29 @@ pipeline {
         }
 
         // NEW: Log in to DockerHub and push the image
-        stage('Docker Push') {
-            steps {
-                echo 'Push de l image vers DockerHub...'
-                // 'dockerhub-credentials' must match the ID you set in Jenkins credentials
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'dali628',
-                    passwordVariable: '!78GFp?LJsJW6_$'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    sh 'docker logout'
-                }
-            }
-        }
+       stage('Docker Push') {
+           steps {
+               echo 'Push de l image vers DockerHub...'
+               withCredentials([usernamePassword(
+                         credentialsId: 'dockerhub-credentials',
+                         usernameVariable: 'dali628',
+                         passwordVariable: '!78GFp?LJsJW6_$'
+               )]) {
+                   script {
+                       // Store in local Groovy variables first
+                       def dockerUser = env.DOCKER_USER
+                       def dockerPass = env.DOCKER_PASS
+
+                       // Now use them safely in sh with double quotes
+                       sh """
+                           echo '${dockerPass}' | docker login -u '${dockerUser}' --password-stdin
+                           docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                           docker logout
+                       """
+                   }
+               }
+           }
+       }
 
     }
 
