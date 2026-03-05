@@ -8,8 +8,8 @@ import tn.esprit.studentmanagement.repositories.DepartmentRepository;
 import java.util.List;
 
 @Service
-
 public class DepartmentService implements IDepartmentService {
+
     @Autowired
     DepartmentRepository departmentRepository;
 
@@ -20,7 +20,10 @@ public class DepartmentService implements IDepartmentService {
 
     @Override
     public Department getDepartmentById(Long idDepartment) {
-        return departmentRepository.findById(idDepartment).get();
+        // FIXED: use orElseThrow() instead of get()
+        // If department not found, throws a clear exception instead of crashing silently
+        return departmentRepository.findById(idDepartment)
+                .orElseThrow(() -> new RuntimeException("Department not found with id: " + idDepartment));
     }
 
     @Override
@@ -30,6 +33,6 @@ public class DepartmentService implements IDepartmentService {
 
     @Override
     public void deleteDepartment(Long idDepartment) {
-departmentRepository.deleteById(idDepartment);
+        departmentRepository.deleteById(idDepartment);
     }
 }
