@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // ⚠️ Replace dali628 with your actual DockerHub username here only
         DOCKER_IMAGE = "dali628/student-management"
         DOCKER_TAG = "latest"
     }
@@ -26,6 +25,22 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean install -DskipTests'
+            }
+        }
+
+        // NEW: SonarQube code quality analysis
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Analyse de la qualite du code avec SonarQube...'
+                // 'SonarQube' must match exactly the name you set in Jenkins System config
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=student-management \
+                        -Dsonar.projectName=student-management \
+                        -Dsonar.host.url=http://192.168.50.4:9000
+                    '''
+                }
             }
         }
 
@@ -54,7 +69,7 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline terminé avec succès! Image disponible sur DockerHub.'
+            echo 'Pipeline terminé avec succès! Rapport disponible sur SonarQube.'
         }
         failure {
             echo 'Le pipeline a échoué.'
